@@ -7,7 +7,8 @@ var argv = require('yargs')
     .alias('e', 'excludes')
     .describe('u', 'mongodb url')
     .describe('e', 'collections to exclude')
-    .default('e', 'sessions,objects')
+    .default('e', 'sessions,objects,system.indexes')
+    .demand(['u', 'e'])
     .example('$0 -u mongodb://localhost:27017/idg', 'create initial ops docs for all snapshots')
     .argv;
 

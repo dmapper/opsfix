@@ -20,7 +20,6 @@ module.exports = function(url, excludes, callback) {
       });
 
       if (!callback) console.log('Collections: ', cols.join(', '));
-      process.exit();
       async.eachSeries(cols, fixCollection.bind(null, db), function () {
         db.close();
         if (callback) {
@@ -33,7 +32,7 @@ module.exports = function(url, excludes, callback) {
   });
 
   function fixCollection(db, snapshotsCollectionName, done){
-        var oplogsCollectionName = snapshotsCollectionName + '_ops';
+    var oplogsCollectionName = snapshotsCollectionName + '_ops';
 
     var snapshotsCollection = db.collection(snapshotsCollectionName);
     var oplogsCollection = db.collection(oplogsCollectionName);
@@ -41,7 +40,6 @@ module.exports = function(url, excludes, callback) {
 
     snapshotsCollection.find({"_v" : {$exists: true}, _m: {$exists: true}}).toArray(function (err, snapshots) {
       if (err) throw err;
-
       snapshots = snapshots || [];
 
       var opsIds = snapshots.map(function(snapshot){
@@ -54,13 +52,17 @@ module.exports = function(url, excludes, callback) {
           return op.name;
         });
 
+
         var docs = prepareDocArray(snapshots, existsOpsIds);
+        console.log('collection', snapshotsCollectionName, snapshots.length, ops.length);
+        //return done()
 
         if (docs.length > 0) {
           oplogsCollection.insert(docs, function(err, r){
             if (err){
               console.log('Err while insert docs', err, docs, oplogsCollectionName)
             }
+            console.log('Results', r.insertedCount, r.insertedIds);
             done();
           });
         } else {
@@ -86,7 +88,6 @@ function prepareDocArray(snapshots, existsOpsIds){
 
       var doc = {
         "_id": id + " v" + version,
-        "del": true,
         "m": {
           "ts": timestamp
         },
@@ -102,8 +103,10 @@ function prepareDocArray(snapshots, existsOpsIds){
         var snap = castToSnapshot(snapshot);
         doc.create = snap.data
       }
+
+      docs.push(doc);
     }
-    docs.push(doc);
+
   });
 
   return docs;
